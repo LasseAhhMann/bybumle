@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>ByBumle</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ByBumle">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f1013">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.json">
+<style>
+:root{
+  --green:#14b25a; --green-d:#0f9a4c; --green-l:#e3f6ea;
+  --yellow:#ffc93c; --dark:#0f1013; --bg:#f2f3f5; --card:#fff;
+  --text:#14161a; --muted:#6c7178; --line:#e6e8ec; --red:#ef4444;
+  --sat:env(safe-area-inset-top); --sab:env(safe-area-inset-bottom);
+  --sal:env(safe-area-inset-left); --sar:env(safe-area-inset-right);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  -webkit-user-select:none;user-select:none;-webkit-text-size-adjust:100%;touch-action:manipulation}
+input,textarea,select{-webkit-user-select:text;user-select:text;font:inherit}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
+svg.i{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.hidden{display:none!important}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column}
+
+/* ---------- LOGIN ---------- */
+#login{background:var(--dark);transition:opacity .35s,transform .35s}
+#login.out{opacity:0;transform:scale(1.04);pointer-events:none}
+.hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:calc(var(--sat) + 30px) 24px 30px}
+.hero svg.logo{width:190px;height:150px}
+.hero h1{font-size:64px;font-weight:800;margin:6px 0 8px;letter-spacing:-1.5px}
+.hero p{margin:0;color:#c9cbd0;font-size:21px;font-weight:600;line-height:1.35}
+.panel{background:#f6f7f8;border-radius:30px 30px 0 0;padding:26px 24px calc(var(--sab) + 26px)}
+.panel-inner{max-width:520px;margin:0 auto}
+.seg{display:flex;background:#e9ebee;border-radius:999px;padding:4px;position:relative}
+.seg button{flex:1;padding:13px 10px;border-radius:999px;font-weight:700;color:#4b5058;font-size:17px;transition:.2s;position:relative;z-index:1}
+.seg button.on{background:var(--green);color:#fff;box-shadow:0 2px 8px rgba(20,178,90,.35)}
+.seg.light button.on{background:#fff;color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.fields{background:#eceef1;border-radius:20px;margin:18px 0 0;padding:4px 18px}
+.field{display:flex;align-items:center;gap:14px;padding:14px 0;color:#6c7178}
+.field+.field{border-top:1px solid #dcdfe3}
+.field input{flex:1;border:0;background:none;font-size:18px;color:var(--text);outline:none;min-width:0}
+.field input::placeholder{color:#8b9097}
+.forgot{display:block;text-align:right;color:var(--green);font-weight:600;text-decoration:underline;font-size:15px;padding:4px 0 12px;width:100%}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:17px;border-radius:999px;font-weight:700;font-size:19px}
+.btn.primary{background:var(--green);color:#fff;margin-top:18px;box-shadow:0 6px 16px rgba(20,178,90,.3)}
+.btn.primary:active{background:var(--green-d)}
+.btn.white{background:#fff;color:#000;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.or{display:flex;align-items:center;gap:14px;color:#8b9097;margin:18px 0;font-size:15px}
+.or:before,.or:after{content:"";flex:1;height:1px;background:#dcdfe3}
+.anon{text-align:center;color:#7a7f86;font-size:14px;margin-top:16px}
+.spinner{width:22px;height:22px;border:3px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (orientation:landscape) and (min-width:900px){
+  #login{flex-direction:row}
+  .hero{flex:1.1}
+  .panel{flex:1;border-radius:30px 0 0 30px;display:flex;align-items:center;padding:30px 40px}
+  .panel-inner{width:100%}
+}
+
+/* ---------- MAIN ---------- */
+#main{background:var(--bg);opacity:0;transition:opacity .4s}
+#main.in{opacity:1}
+.views{flex:1;position:relative;overflow:hidden}
+.view{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(var(--sat) + 22px) calc(var(--sar) + 22px) calc(var(--sab) + 120px) calc(var(--sal) + 22px);display:none;animation:fade .25s}
+.view.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.wrap{max-width:980px;margin:0 auto}
+.head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.head h2{font-size:34px;font-weight:800;margin:0;letter-spacing:-.6px}
+.head .sub{color:var(--muted);font-size:16px;margin-top:2px}
+.avatar{width:46px;height:46px;border-radius:50%;background:var(--yellow);display:grid;place-items:center;font-weight:800;color:#3b2a00;flex:none}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+.card{background:var(--card);border-radius:22px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card h3{margin:0 0 12px;font-size:19px;display:flex;align-items:center;gap:8px}
+.muted{color:var(--muted)}
+.big{font-size:30px;font-weight:800;letter-spacing:-.5px}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:13px;font-weight:700;white-space:nowrap}
+.row{display:flex;align-items:center;gap:12px}
+.between{justify-content:space-between}
+.bar{height:10px;background:#edf0f2;border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--green);border-radius:99px;transition:width .8s}
+.sec-title{font-size:22px;font-weight:800;margin:28px 0 12px}
+.chip-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;scrollbar-width:none}
+.chip-row::-webkit-scrollbar{display:none}
+.chip{padding:9px 15px;border-radius:999px;background:#fff;font-weight:600;font-size:15px;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.chip.on{background:var(--text);color:#fff}
+
+/* tabbar */
+.tabbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--sab) + 14px);width:min(640px,calc(100% - 28px));
+  background:rgba(255,255,255,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:30px;display:flex;padding:8px;box-shadow:0 8px 30px rgba(0,0,0,.12);z-index:20}
+.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;color:#8a8f96;font-size:13px;font-weight:600;border-radius:22px}
+.tabbar button svg{width:27px;height:27px}
+.tabbar button.on{color:var(--green)}
+.tabbar button.on svg{fill:currentColor;fill-opacity:.18}
+
+/* I dag */
+.ring-card{display:flex;align-items:center;gap:18px}
+.ring{position:relative;width:140px;height:140px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .c svg{width:28px;height:28px;transform:none}
+.mini{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1}
+.mini div{background:#f5f6f8;border-radius:16px;padding:12px 12px;min-width:0}
+.mini b{display:block;font-size:21px;white-space:nowrap}
+.mini span{font-size:13px;color:var(--muted);white-space:nowrap}
+.week{display:flex;align-items:flex-end;gap:10px;height:130px;padding-top:6px}
+.week div{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.week i{display:block;width:100%;max-width:34px;background:#cfeedd;border-radius:9px 9px 4px 4px;transition:height .8s}
+.week .today i{background:var(--green)}
+.week span{font-size:13px;color:var(--muted);font-weight:600}
+.banner{background:linear-gradient(135deg,#0f1013,#2a2d33);color:#fff;border-radius:22px;padding:22px;display:flex;align-items:center;gap:18px;position:relative;overflow:hidden}
+.banner .em{font-size:44px}
+.banner b{font-size:21px;display:block}
+.banner p{margin:4px 0 0;color:#c9cbd0}
+.banner:after{content:"";position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,201,60,.18)}
+.faces{display:flex}
+.faces span{width:34px;height:34px;border-radius:50%;border:2px solid #fff;margin-left:-8px;display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff}
+.faces span:first-child{margin-left:0}
+
+/* Kort */
+#v-kort{padding:0;overflow:hidden}
+#map{position:absolute;inset:0;width:100%;height:100%;touch-action:none;background:#eef0ea}
+.map-panel{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--sab) + 108px);width:min(620px,calc(100% - 28px));background:rgba(248,249,250,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:26px;padding:12px;box-shadow:0 8px 30px rgba(0,0,0,.14)}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);margin-top:12px;background:#fff;border-radius:20px;padding:14px 4px}
+.stats3>div{display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 6px}
+.stats3>div+div{border-left:1px solid var(--line)}
+.stats3 .ic{width:58px;height:58px;border-radius:50%;background:var(--green-l);color:var(--green);display:grid;place-items:center;margin-bottom:8px}
+.stats3 .ic svg{width:30px;height:30px}
+.stats3 b{font-size:25px;letter-spacing:-.4px}
+.stats3 span{color:#4b5058;font-size:15px}
+.locbtn{position:absolute;right:calc(var(--sar) + 20px);top:calc(var(--sat) + 20px);width:56px;height:56px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 4px 14px rgba(0,0,0,.14)}
+.map-title{position:absolute;left:calc(var(--sal) + 20px);top:calc(var(--sat) + 20px);background:#fff;border-radius:999px;padding:11px 18px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.12);display:flex;gap:8px;align-items:center}
+.live{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(20,178,90,.6);animation:pulse 1.6s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 10px rgba(20,178,90,0)}100%{box-shadow:0 0 0 0 rgba(20,178,90,0)}}
+.mk{cursor:pointer}
+
+/* Rangliste */
+.podium{display:grid;grid-template-columns:1fr 1fr 1fr;align-items:end;gap:12px;margin:10px 0 18px}
+.pod{display:flex;flex-direction:column;align-items:center;text-align:center}
+.pod .avatar{width:64px;height:64px;font-size:22px;margin-bottom:8px;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.pod .blk{width:100%;border-radius:18px 18px 8px 8px;margin-top:10px;display:flex;align-items:flex-start;justify-content:center;padding-top:12px;font-size:30px;font-weight:900;color:#fff}
+.pod .nm{font-weight:700;font-size:15px;line-height:1.2;min-height:36px;display:flex;align-items:center}
+.pod .pt{color:var(--muted);font-size:14px}
+.lb{background:#fff;border-radius:22px;overflow:hidden}
+.lb .r{display:flex;align-items:center;gap:14px;padding:14px 18px}
+.lb .r+.r{border-top:1px solid var(--line)}
+.lb .r.me{background:var(--green-l)}
+.lb .n{width:28px;font-weight:800;color:var(--muted);text-align:center}
+.lb .avatar{width:42px;height:42px}
+.lb .nm{flex:1;font-weight:700}
+.lb .nm small{display:block;font-weight:500;color:var(--muted)}
+.lb .p{font-weight:800}
+.trend{font-size:12px;font-weight:700}
+
+/* Forslag */
+.fcards{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.fcard{background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05);text-align:left;display:flex;flex-direction:column}
+.fimg{height:150px;display:grid;place-items:center;color:#fff;position:relative;background-size:cover;background-position:center}
+.fimg svg{width:64px;height:64px;stroke-width:1.6;opacity:.95}
+.fimg .pill{position:absolute;left:12px;top:12px;background:#fff}
+.fbody{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;flex:1}
+.fbody b{font-size:18px;line-height:1.25}
+.meta{display:flex;gap:14px;color:var(--muted);font-size:14px;align-items:center;flex-wrap:wrap}
+.meta span{display:inline-flex;align-items:center;gap:5px}
+.meta svg{width:17px;height:17px}
+.fab{display:inline-flex;align-items:center;gap:8px;background:var(--green);color:#fff;font-weight:700;border-radius:999px;padding:12px 18px;box-shadow:0 6px 16px rgba(20,178,90,.3)}
+
+/* Sheet */
+#scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.3s;z-index:40}
+#scrim.on{opacity:1;pointer-events:auto}
+#sheet{position:fixed;left:50%;bottom:0;transform:translate(-50%,105%);width:min(720px,100%);max-height:calc(100% - var(--sat) - 30px);background:#f6f7f8;border-radius:28px 28px 0 0;z-index:41;transition:transform .35s cubic-bezier(.2,.9,.3,1);display:flex;flex-direction:column}
+#sheet.on{transform:translate(-50%,0)}
+.grab{width:44px;height:5px;border-radius:9px;background:#cfd2d6;margin:10px auto 4px}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;padding:6px 22px 10px}
+.sheet-head h3{margin:0;font-size:22px}
+.xbtn{width:36px;height:36px;border-radius:50%;background:#e6e8eb;display:grid;place-items:center;color:#555}
+.xbtn svg{width:18px;height:18px}
+.sheet-body{overflow-y:auto;padding:4px 22px calc(var(--sab) + 26px)}
+.timeline{display:flex;gap:4px;margin:14px 0 6px}
+.timeline i{flex:1;height:6px;border-radius:9px;background:#dfe2e6}
+.timeline i.done{background:var(--green)}
+.tl-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);gap:4px}
+.tl-labels span{flex:1;text-align:center}
+.tl-labels span.cur{color:var(--green);font-weight:800}
+.info3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
+.info3 div{background:#fff;border-radius:16px;padding:12px}
+.info3 small{color:var(--muted);display:block;font-size:12px}
+.info3 b{font-size:16px}
+.vote{display:flex;gap:10px}
+.vote .btn{padding:14px}
+.btn.outline{background:#fff;border:2px solid var(--line)}
+.btn.voted{background:var(--green-l);color:var(--green-d);box-shadow:none}
+.cm{display:flex;gap:12px;margin-top:14px}
+.cm .avatar{width:38px;height:38px;font-size:14px}
+.cm .bub{background:#fff;border-radius:4px 18px 18px 18px;padding:10px 14px;flex:1}
+.cm .bub b{font-size:14px}
+.cm .bub p{margin:3px 0 0;font-size:15px;line-height:1.4}
+.official{background:#e8f1ff;color:#2563eb}
+.form label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px;color:#4b5058}
+.form input,.form textarea,.form select{width:100%;border:1px solid var(--line);background:#fff;border-radius:14px;padding:13px 14px;font-size:17px;outline:none;color:var(--text);-webkit-appearance:none;appearance:none}
+.form textarea{min-height:90px;resize:none}
+.photo{border:2px dashed #cfd2d6;border-radius:16px;height:140px;display:grid;place-items:center;color:var(--muted);background:#fff center/cover no-repeat;position:relative;overflow:hidden;width:100%}
+.photo input{position:absolute;inset:0;opacity:0}
+.opt{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.opt button{background:#fff;border:2px solid var(--line);border-radius:16px;padding:12px;text-align:center}
+.opt button.on{border-color:var(--green);background:var(--green-l)}
+.opt b{display:block;font-size:20px}
+
+/* Profil */
+.prof{display:flex;align-items:center;gap:18px}
+.prof .avatar{width:84px;height:84px;font-size:32px}
+.lvl{background:var(--yellow);color:#3b2a00}
+.reward{display:flex;align-items:center;gap:14px;padding:14px 0}
+.reward+.reward{border-top:1px solid var(--line)}
+.reward .em{width:52px;height:52px;border-radius:16px;background:#f5f6f8;display:grid;place-items:center;font-size:28px;flex:none}
+.reward .t{flex:1}
+.reward .t small{display:block;color:var(--muted)}
+.sm{padding:9px 16px;border-radius:999px;font-weight:700;font-size:14px;background:var(--green);color:#fff}
+.sm.dis{background:#e6e8eb;color:#9aa0a6}
+.toggle{width:52px;height:32px;border-radius:99px;background:#d6d9dd;position:relative;transition:.2s;flex:none}
+.toggle:after{content:"";position:absolute;left:3px;top:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:.2s}
+.toggle.on{background:var(--green)}
+.toggle.on:after{left:23px}
+.set{display:flex;align-items:center;gap:14px;padding:14px 0}
+.set+.set{border-top:1px solid var(--line)}
+.set .t{flex:1;font-weight:600}
+.set .t small{display:block;font-weight:400;color:var(--muted)}
+.wins{display:flex;gap:6px;margin:10px 0}
+.wins i{flex:1;height:12px;border-radius:9px;background:#edf0f2}
+.wins i.on{background:var(--yellow)}
+
+/* toast */
+#toast{position:fixed;left:50%;top:calc(var(--sat) + 16px);transform:translate(-50%,-250%);opacity:0;background:var(--text);color:#fff;padding:13px 20px;border-radius:999px;font-weight:600;z-index:60;transition:transform .35s cubic-bezier(.2,.9,.3,1);display:flex;gap:10px;align-items:center;max-width:90%;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+#toast.on{transform:translate(-50%,0);opacity:1}
+#toast svg{color:#4ade80}
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<section id="login" class="screen">
+  <div class="hero">
+    <svg class="logo" viewBox="0 0 220 170" aria-hidden="true">
+      <path d="M8 150 C 30 120, 70 160, 60 120 S 20 80, 60 70" fill="none" stroke="#14b25a" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 12"/>
+      <g transform="translate(130 92) rotate(-14)">
+        <ellipse cx="-14" cy="-38" rx="20" ry="32" fill="#fff" opacity=".95" transform="rotate(-25 -14 -38)"/>
+        <ellipse cx="12" cy="-40" rx="17" ry="28" fill="#e9eef3" opacity=".95" transform="rotate(18 12 -40)"/>
+        <ellipse cx="0" cy="0" rx="56" ry="40" fill="#ffc93c"/>
+        <clipPath id="bodyclip"><ellipse cx="0" cy="0" rx="56" ry="40"/></clipPath>
+        <g clip-path="url(#bodyclip)" fill="#111">
+          <rect x="-34" y="-45" width="14" height="90" rx="4"/>
+          <rect x="-6" y="-45" width="14" height="90" rx="4"/>
+          <rect x="-62" y="-45" width="10" height="90"/>
+        </g>
+        <circle cx="38" cy="-6" r="22" fill="#111"/>
+        <circle cx="46" cy="-11" r="9" fill="#fff"/>
+        <circle cx="48" cy="-11" r="5" fill="#111"/>
+        <circle cx="50" cy="-13" r="1.8" fill="#fff"/>
+        <path d="M30 -26 Q 34 -46 46 -50 M42 -24 Q 52 -42 64 -42" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/>
+        <path d="M-56 0 l-12 4 l12 4z" fill="#111"/>
+      </g>
+    </svg>
+    <h1>ByBumle</h1>
+    <p>Når vi bevæger os sammen,<br>gør vi vores by bedre.</p>
+  </div>
+  <div class="panel"><div class="panel-inner">
+    <div class="seg" id="loginSeg">
+      <button class="on" data-m="in">Log ind</button>
+      <button data-m="new">Opret konto</button>
+    </div>
+    <form id="loginForm" autocomplete="off">
+      <div class="fields">
+        <div class="field hidden" id="nameField"><svg class="i"><use href="#i-user"/></svg><input id="name" placeholder="Fornavn" autocapitalize="words"></div>
+        <div class="field"><svg class="i"><use href="#i-mail"/></svg><input id="email" type="email" placeholder="E-mail" autocapitalize="off" autocorrect="off"></div>
+        <div class="field"><svg class="i"><use href="#i-lock"/></svg><input id="pw" type="password" placeholder="Adgangskode"><button type="button" id="eye" aria-label="Vis adgangskode"><svg class="i"><use href="#i-eye"/></svg></button></div>
+        <button type="button" class="forgot" id="forgot">Glemt adgangskode?</button>
+      </div>
+      <button class="btn primary" id="loginBtn" type="submit">Log ind</button>
+    </form>
+    <div class="or">eller</div>
+    <button class="btn white" id="appleBtn"><svg class="i" style="fill:#000;stroke:none"><use href="#i-apple"/></svg>Fortsæt med Apple</button>
+    <div class="anon">Du kan være anonym på ranglisterne</div>
+  </div></div>
+</section>
+
+<!-- ================= MAIN ================= -->
+<section id="main" class="screen hidden">
+  <div class="views">
+    <div class="view on" id="v-idag"></div>
+    <div class="view" id="v-kort"></div>
+    <div class="view" id="v-rang"></div>
+    <div class="view" id="v-forslag"></div>
+    <div class="view" id="v-profil"></div>
+  </div>
+  <nav class="tabbar" id="tabbar">
+    <button class="on" data-v="idag"><svg class="i"><use href="#i-home"/></svg>I dag</button>
+    <button data-v="kort"><svg class="i"><use href="#i-pin"/></svg>Kort</button>
+    <button data-v="rang"><svg class="i"><use href="#i-bars"/></svg>Rangliste</button>
+    <button data-v="forslag"><svg class="i"><use href="#i-bulb"/></svg>Forslag</button>
+    <button data-v="profil"><svg class="i"><use href="#i-user"/></svg>Profil</button>
+  </nav>
+</section>
+
+<div id="scrim"></div>
+<div id="sheet"><div class="grab"></div><div class="sheet-head"><h3 id="sheetTitle"></h3><button class="xbtn" id="sheetX"><svg class="i"><use href="#i-close"/></svg></button></div><div class="sheet-body" id="sheetBody"></div></div>
+<div id="toast"><svg class="i"><use href="#i-check"/></svg><span></span></div>
+
+<!-- ================= ICONS ================= -->
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+  <symbol id="i-bars" viewBox="0 0 24 24"><path d="M6 20v-8M12 20V5M18 20v-5" stroke-width="3.2"/></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-apple" viewBox="0 0 24 24"><path d="M16.4 12.7c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.3 1.2 9.7.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.1-.8 1.5 0 1.9.8 3.2.8 1.3 0 2.1-1.2 2.9-2.4.9-1.4 1.3-2.7 1.3-2.8-.1 0-2.4-.9-2.4-3.8zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1.1.1 2.1-.6 2.8-1.4z"/></symbol>
+  <symbol id="i-steps" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M7.5 2.5c1.8 0 2.7 2.1 2.7 4.6S9.1 11.5 7.5 11.5 4.8 9.4 4.8 7.1s.9-4.6 2.7-4.6zM5.4 13.2h4.3v1.9a2.15 2.15 0 0 1-4.3 0zM16.5 7c1.8 0 2.7 2.1 2.7 4.6S18.1 16 16.5 16s-2.7-2.1-2.7-4.4S14.7 7 16.5 7zM14.3 17.6h4.3v1.9a2.15 2.15 0 0 1-4.3 0z"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M20.5 3.5C9 3.5 4 9 4 15.5c0 1.4.3 2.7.8 3.8L3 21l1.4 1.4 2-2c1.2.8 2.7 1.1 4.1 1.1 6.5 0 10-6 10-18z"/><path d="M6 19c3-4 6-7 10-9.5" stroke="#e3f6ea" stroke-width="1.6"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><circle cx="12" cy="7" r="3.2"/><circle cx="5" cy="9" r="2.4"/><circle cx="19" cy="9" r="2.4"/><path d="M6.5 19c0-3.4 2.4-6 5.5-6s5.5 2.6 5.5 6zM1 19c0-2.6 1.7-4.6 4-4.6 1 0 1.8.3 2.5.8C6.3 16.2 5.6 17.5 5.5 19zM23 19c0-2.6-1.7-4.6-4-4.6-1 0-1.8.3-2.5.8 1.2 1 1.9 2.3 2 3.8z"/></g></symbol>
+  <symbol id="i-bike" viewBox="0 0 24 24"><circle cx="5.5" cy="16.5" r="3.5"/><circle cx="18.5" cy="16.5" r="3.5"/><path d="M5.5 16.5 9 9h6l3.5 7.5M9 9l3 7.5M13.5 5.5h2.5L15 9"/></symbol>
+  <symbol id="i-nav" viewBox="0 0 24 24"><path d="M20 4 4 11l7 2 2 7z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-thumb" viewBox="0 0 24 24"><path d="M7 11v9H4v-9zM7 11l4-8a2 2 0 0 1 2 2v4h5.5a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.3 20H7"/></symbol>
+  <symbol id="i-comment" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol>
+  <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9 17h6"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 3s5.5 4.5 5.5 10a5.5 5.5 0 0 1-11 0c0-3.5 2.5-5 2.5-5s0 3 2.5 3.5C11.5 8 12 5.5 12 3z"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.3"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-tree" viewBox="0 0 24 24"><path d="M12 21v-5M12 2.5 18.5 12h-4l4.5 6H5l4.5-6h-4z"/></symbol>
+  <symbol id="i-lamp" viewBox="0 0 24 24"><path d="M12 21V9M7.5 9h9L14 4h-4zM9 21h6M10 12.5l-2 2.5M14 12.5l2 2.5"/></symbol>
+  <symbol id="i-water" viewBox="0 0 24 24"><path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/></symbol>
+  <symbol id="i-bench" viewBox="0 0 24 24"><path d="M4 7h16v3H4zM3 13h18M5 13v6M19 13v6M6 10v3M18 10v3"/></symbol>
+  <symbol id="i-road" viewBox="0 0 24 24"><path d="M8 3 5 21M16 3l3 18M12 4v3M12 10.5v3M12 17v3"/></symbol>
+  <symbol id="i-school" viewBox="0 0 24 24"><path d="m2 9 10-5 10 5-10 5zM6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5M22 9v6"/></symbol>
+  <symbol id="i-walk" viewBox="0 0 24 24"><circle cx="13" cy="4" r="2"/><path d="m9 21 2.5-6.5L14 17v4M7 12l2.5-4h4l2 3.5 3 1M11.5 14.5 13.5 8"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></symbol>
+  <symbol id="i-gift" viewBox="0 0 24 24"><path d="M4 11h16v10H4zM3 7.5h18V11H3zM12 7.5V21M12 7.5S10 3 7.8 3.6 7 7.5 12 7.5zM12 7.5s2-4.5 4.2-3.9S17 7.5 12 7.5z"/></symbol>
+</svg>
+
+<script>
+/* =========================================================
+   ByBumle – demo/mock-up. Alle data er opdigtede.
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const ic = (n, cls='') => `<svg class="i ${cls}"><use href="#i-${n}"/></svg>`;
+const fmt = n => n.toLocaleString('da-DK');
+const COLORS = ['#f59e0b','#3b82f6','#ef4444','#8b5cf6','#14b25a','#ec4899','#06b6d4','#f97316'];
+const colorFor = s => COLORS[[...s].reduce((a,c)=>a+c.charCodeAt(0),0)%COLORS.length];
+const initials = s => s.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+
+const state = {
+  name: 'Malthe', anon: false, health: true, wins: 7,
+  groups: [
+    {name:'6.B Gå-holdet', members:18, emoji:'🚶'},
+    {name:'Fredagscyklisterne', members:9, emoji:'🚲'}
+  ],
+  myVotes: new Set(),
+};
+
+/* ---------------- toast ---------------- */
+let toastT;
+function toast(msg){
+  const t=$('#toast'); t.querySelector('span').textContent=msg; t.classList.add('on');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('on'),2400);
+}
+
+/* ---------------- LOGIN ---------------- */
+let mode='in';
+$('#loginSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  mode=b.dataset.m;
+  document.querySelectorAll('#loginSeg button').forEach(x=>x.classList.toggle('on',x===b));
+  $('#nameField').classList.toggle('hidden',mode!=='new');
+  $('#forgot').classList.toggle('hidden',mode==='new');
+  $('#loginBtn').textContent = mode==='new' ? 'Opret konto' : 'Log ind';
+});
+$('#eye').onclick=()=>{const p=$('#pw'); p.type=p.type==='password'?'text':'password';};
+$('#forgot').onclick=()=>toast('Vi har sendt et link til din e-mail');
+$('#loginForm').addEventListener('submit',e=>{e.preventDefault(); doLogin();});
+$('#appleBtn').onclick=()=>doLogin('Malthe');
+
+function doLogin(forced){
+  document.activeElement && document.activeElement.blur();
+  let nm = forced || $('#name').value.trim();
+  if(!nm){
+    const em=$('#email').value.trim().split('@')[0].split(/[._\-0-9]/)[0];
+    nm = em ? em : 'Malthe';
+  }
+  state.name = nm.charAt(0).toUpperCase()+nm.slice(1).toLowerCase();
+  const b=$('#loginBtn'); b.innerHTML='<div class="spinner"></div>';
+  setTimeout(()=>{
+    renderAll();
+    $('#main').classList.remove('hidden');
+    requestAnimationFrame(()=>{$('#main').classList.add('in');$('#login').classList.add('out');});
+    setTimeout(()=>{$('#login').classList.add('hidden'); b.textContent= mode==='new'?'Opret konto':'Log ind';},400);
+    if(mode==='new') setTimeout(()=>toast('Velkommen til ByBumle, '+state.name+'!'),500);
+  },900);
+}
+function logout(){
+  closeSheet();
+  $('#login').classList.remove('hidden');
+  requestAnimationFrame(()=>{$('#login').classList.remove('out');$('#main').classList.remove('in');});
+  setTimeout(()=>{$('#main').classList.add('hidden');switchView('idag');},400);
+  $('#pw').value='';
+}
+
+/* ---------------- TABS ---------------- */
+$('#tabbar').addEventListener('click',e=>{const b=e.target.closest('button'); if(b) switchView(b.dataset.v);});
+function switchView(v){
+  document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));
+  const el=$('#v-'+v); el.scrollTop=0;
+  if(v==='idag') animateIdag();
+  if(v==='kort') fitMap();
+}
+function renderAll(){ renderIdag(); renderKort(); renderRang(); renderForslag(); renderProfil(); animateIdag(); }
+
+/* ---------------- I DAG ---------------- */
+const WEEK=[{d:'Ma',v:9120},{d:'Ti',v:11340},{d:'On',v:6480},{d:'To',v:12810},{d:'Fr',v:8432,t:1},{d:'Lø',v:0},{d:'Sø',v:0}];
+function greeting(){const h=new Date().getHours(); return h<10?'Godmorgen':h<17?'Goddag':'Godaften';}
+function renderIdag(){
+  const max=13000;
+  $('#v-idag').innerHTML=`<div class="wrap">
+    <div class="head"><div><h2>${greeting()}, ${state.name}</h2><div class="sub">${new Date().toLocaleDateString('da-DK',{weekday:'long',day:'numeric',month:'long'})}</div></div>
+      <button class="avatar" style="background:var(--yellow)" onclick="switchView('profil')">${initials(state.name)}</button></div>
+    <div class="grid">
+      <div class="card ring-card">
+        <div class="ring">
+          <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="#edf0f2" stroke-width="13"/>
+          <circle id="ringArc" cx="60" cy="60" r="50" fill="none" stroke="#14b25a" stroke-width="13" stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16" style="transition:stroke-dashoffset 1.2s ease"/></svg>
+          <div class="c"><span style="color:var(--green)">${ic('steps')}</span><b class="big" id="stepCount">0</b><span class="muted" style="font-size:12px">af 10.000</span></div>
+        </div>
+        <div class="mini">
+          <div><b>6,2 km</b><span>cyklet i dag</span></div>
+          <div><b>+184</b><span>point i dag</span></div>
+          <div><b>${ic('flame','" style="width:20px;height:20px;color:#f97316;vertical-align:-3px')} 12</b><span>dage i træk</span></div>
+          <div><b>1,1 kg</b><span>CO₂ sparet</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Denne uge <span class="muted" style="font-weight:500;font-size:15px;margin-left:auto">48.182 skridt</span></h3>
+        <div class="week">${WEEK.map(w=>`<div class="${w.t?'today':''}"><i data-h="${Math.max(4,w.v/max*100)}" style="height:0%"></i><span>${w.d}</span></div>`).join('')}</div>
+      </div>
+    </div>
+
+    <div class="sec-title">Din skole</div>
+    <div class="grid">
+      <div class="card">
+        <div class="row between"><div class="row"><div class="avatar" style="background:#e3f6ea;color:var(--green)">${ic('school')}</div><div><b style="font-size:18px">Tønder Distriktsskole</b><div class="muted">#2 i Tønder Kommune</div></div></div><span class="pill" style="background:#fff4d6;color:#a16207">🥈 2. plads</span></div>
+        <div style="margin:18px 0 8px" class="row between"><span class="muted">Mangler til 1. pladsen</span><b>1.240 point</b></div>
+        <div class="bar"><i style="width:82%"></i></div>
+        <div class="muted" style="font-size:14px;margin-top:10px">Du har bidraget med <b style="color:var(--text)">1.284 point</b> denne måned 💪</div>
+      </div>
+      <div class="card">
+        <h3>${ic('users','" style="color:var(--green)')} Gruppe-udfordring</h3>
+        <b style="font-size:18px">6.B Gå-holdet: 250 km i november</b>
+        <div class="row between" style="margin:14px 0 8px"><div class="faces">${['Victor','Johan','Ida','Noah','Emma'].map(n=>`<span style="background:${colorFor(n)}">${n[0]}</span>`).join('')}<span style="background:#cfd2d6;color:#444">+13</span></div><b>171 / 250 km</b></div>
+        <div class="bar"><i style="width:68%;background:linear-gradient(90deg,#14b25a,#86efac)"></i></div>
+      </div>
+    </div>
+
+    <div class="sec-title">Præmier</div>
+    <div class="grid">
+      <div class="banner"><div class="em">🎬</div><div style="position:relative;z-index:1"><b>Månedens præmie</b><p>Biografbilletter til hele klassen – til den klasse i Tønder, der går flest skridt i november.</p><span class="pill" style="background:rgba(255,255,255,.15);color:#fff;margin-top:10px">${ic('clock','" style="width:15px;height:15px')} 25 dage tilbage</span></div></div>
+      <div class="banner" style="background:linear-gradient(135deg,#14b25a,#0b7a3c)"><div class="em">🏆</div><div style="position:relative;z-index:1"><b>Årets store præmie: 10.000 kr.</b><p>Til den der går flest skridt eller cykler mest i hele Danmark, når året er omme.</p><span class="pill" style="background:rgba(255,255,255,.18);color:#fff;margin-top:10px">Du er nr. 1.482 af 61.300</span></div></div>
+    </div>
+  </div>`;
+}
+function animateIdag(){
+  const arc=$('#ringArc'); if(!arc) return;
+  arc.style.transition='none'; arc.style.strokeDashoffset=314.16;
+  document.querySelectorAll('.week i').forEach(i=>{i.style.transition='none';i.style.height='0%';});
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    arc.style.transition='stroke-dashoffset 1.2s ease'; arc.style.strokeDashoffset=314.16*(1-0.8432);
+    document.querySelectorAll('.week i').forEach(i=>{i.style.transition='height .8s ease';i.style.height=i.dataset.h+'%';});
+  }));
+  const el=$('#stepCount'); const target=8432; const t0=performance.now();
+  (function step(t){const p=Math.min(1,(t-t0)/1200); el.textContent=fmt(Math.round(target*(1-Math.pow(1-p,3)))); if(p<1) requestAnimationFrame(step);})(t0);
+}
+
+/* ---------------- KORT ---------------- */
+let mapMode='bev';
+const MAPSTATS={
+  bev:[['steps','184.200','km tilbagelagt'],['leaf','41,3 t','CO₂ sparet'],['users','12.480','bumler i dag']],
+  ruter:[['bike','38','populære ruter'],['nav','7,4 km','gns. rutelængde'],['users','2.310','på Skolevejen i dag']],
+  prob:[['alert','14','åbne problemer'],['clock','6','sendt til kommunen'],['check','5','løst i år']],
+};
+function seeded(s){return ()=>{s=(s*9301+49297)%233280;return s/233280;};}
+function streets(){
+  // små kvarterer med parallelle veje
+  const D=[[560,300,.15,200,160],[820,300,-.35,200,170],[480,560,.25,220,170],[820,560,.05,240,190],[690,430,-.1,160,120],[380,330,-.2,140,120],[960,420,.4,150,140],[300,560,0,150,120]];
+  let out='';
+  D.forEach(([cx,cy,a,w,h])=>{
+    const c=Math.cos(a), s=Math.sin(a);
+    const P=(x,y)=>[(cx+x*c-y*s).toFixed(0),(cy+x*s+y*c).toFixed(0)];
+    for(let k=-2;k<=2;k++){ const y=k*h/4.5; const [x1,y1]=P(-w/2,y),[x2,y2]=P(w/2,y); out+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`; }
+    for(let k=-2;k<=2;k++){ const x=k*w/4.5; const [x1,y1]=P(x,-h/2),[x2,y2]=P(x,h/2); out+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`; }
+  });
+  return out;
+}
+function blocks(){
+  const r=seeded(3); let out='';
+  for(let k=0;k<200;k++){
+    const a=r()*Math.PI*2, d=Math.sqrt(r()), x=700+Math.cos(a)*380*d, y=470+Math.sin(a)*290*d;
+    out+=`<rect x="${x.toFixed(0)}" y="${y.toFixed(0)}" width="${(8+r()*14).toFixed(0)}" height="${(8+r()*12).toFixed(0)}" rx="2" transform="rotate(${(r()*40-20).toFixed(0)} ${x.toFixed(0)} ${y.toFixed(0)})"/>`;
+  }
+  return out;
+}
+const PROBS=[
+  {x:430,y:420,t:'Farligt kryds',f:1},
+  {x:1005,y:445,t:'Manglende cykelsti',f:0},
+  {x:640,y:690,t:'Mørk sti til hallen',f:3},
+  {x:810,y:250,t:'Smalt fortov',f:6},
+];
+function renderKort(){
+  const shield=(x,y,n)=>`<g transform="translate(${x} ${y})"><rect x="-22" y="-15" width="44" height="30" rx="6" fill="#fff" stroke="#9aa0a6" stroke-width="2"/><text y="6" text-anchor="middle" font-size="17" font-weight="700" fill="#555">${n}</text></g>`;
+  const tree=(x,y)=>`<g transform="translate(${x-11} ${y-11})" stroke="#3f9d5b" fill="none" stroke-width="2.2"><use href="#i-tree" width="22" height="22"/></g>`;
+  const heat=(x,y,r)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="url(#heat)"/>`;
+  const bikeMk=(x,y)=>`<g transform="translate(${x} ${y})"><circle r="22" fill="#14b25a" stroke="#fff" stroke-width="3"/><g transform="translate(-12 -12)" stroke="#fff" fill="none" stroke-width="2.2"><use href="#i-bike" width="24" height="24"/></g></g>`;
+  const probMk=(p,i)=>`<g class="mk" data-p="${i}" transform="translate(${p.x} ${p.y})"><rect x="8" y="-17" rx="8" width="${p.t.length*9.2+28}" height="34" fill="#fff" filter="url(#sh)"/><text x="30" y="6" font-size="16" font-weight="700" fill="#14161a">${p.t}</text><circle r="20" fill="#ef4444" stroke="#fff" stroke-width="3"/><text y="7" text-anchor="middle" fill="#fff" font-size="22" font-weight="900">!</text></g>`;
+  $('#v-kort').innerHTML=`
+  <svg id="map" viewBox="250 50 900 900" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <radialGradient id="heat"><stop offset="0" stop-color="#14b25a" stop-opacity=".85"/><stop offset=".45" stop-color="#22c55e" stop-opacity=".35"/><stop offset="1" stop-color="#22c55e" stop-opacity="0"/></radialGradient>
+      <filter id="sh" x="-20%" y="-30%" width="140%" height="180%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity=".18"/></filter>
+    </defs>
+    <g id="mapG">
+      <rect x="-1000" y="-1000" width="3400" height="3000" fill="#eef0ea"/>
+      <g fill="#d8eed6">
+        <rect x="250" y="120" width="250" height="190" rx="30"/>
+        <rect x="900" y="560" width="230" height="170" rx="30"/>
+        <rect x="-200" y="560" width="380" height="260" rx="40"/>
+        <rect x="1180" y="80" width="320" height="260" rx="40"/>
+        <rect x="560" y="760" width="160" height="110" rx="24"/>
+      </g>
+      <g fill="#c3e3f2"><ellipse cx="560" cy="300" rx="34" ry="18"/><ellipse cx="610" cy="330" rx="22" ry="12"/></g>
+      <path d="M1250 -100 C1220 120 1150 260 1130 420 S1180 700 1080 820 S760 900 520 930 S100 900 -200 870" fill="none" stroke="#a6d6ee" stroke-width="40" stroke-linecap="round"/>
+      <path d="M1250 -100 C1220 120 1150 260 1130 420 S1180 700 1080 820 S760 900 520 930 S100 900 -200 870" fill="none" stroke="#bfe3f4" stroke-width="22" stroke-linecap="round"/>
+      <g fill="#e3e5e0">${blocks()}</g>
+      <g stroke="#fff" stroke-width="7" stroke-linecap="round">${streets()}</g>
+      <g fill="none" stroke-linecap="round">
+        <g stroke="#d5d8d2" stroke-width="24">
+          <path d="M540 -100 L640 420 L700 1100"/><path d="M-200 460 L700 400 L1600 330"/><path d="M960 -100 L780 520"/><path d="M260 1100 L600 560"/>
+        </g>
+        <g stroke="#fff" stroke-width="18">
+          <path d="M540 -100 L640 420 L700 1100"/><path d="M-200 460 L700 400 L1600 330"/><path d="M960 -100 L780 520"/><path d="M260 1100 L600 560"/>
+        </g>
+      </g>
+      <g font-weight="600" fill="#3f9d5b" font-size="20" text-anchor="middle">
+        ${tree(375,175)}<text x="375" y="215">Tønder</text><text x="375" y="240">Kirkegård</text>
+        ${tree(1015,610)}<text x="1015" y="650">Tønder</text><text x="1015" y="675">Sportsplads</text>
+      </g>
+      <text x="700" y="490" text-anchor="middle" font-size="46" font-weight="800" fill="#2b2e33" stroke="#eef0ea" stroke-width="8" paint-order="stroke">Tønder</text>
+      <text x="1158" y="560" font-size="15" fill="#5b9fc0" font-style="italic" transform="rotate(78 1158 560)">Vidå</text>
+      ${shield(585,80,'419')}${shield(470,800,'435')}${shield(1300,345,'11')}
+
+      <g id="ov-bev">
+        <g fill="none" stroke="#14b25a" stroke-width="5" stroke-dasharray="14 10" opacity=".85">
+          <path d="M-100 520 L280 480 L560 430"/><path d="M640 420 L860 140 L960 20"/><path d="M640 420 L700 900"/>
+        </g>
+        ${heat(560,410,120)}${heat(840,160,95)}${heat(300,680,100)}${heat(1000,470,85)}${heat(690,600,70)}
+        ${bikeMk(880,180)}${bikeMk(270,740)}${bikeMk(720,640)}
+      </g>
+      <g id="ov-ruter" style="display:none" fill="none" stroke-linecap="round">
+        <path d="M140 620 C300 560 420 470 640 420 S900 300 1060 200" stroke="#14b25a" stroke-width="12" opacity=".9"/>
+        <path d="M680 880 C690 720 650 560 640 420" stroke="#0ea5e9" stroke-width="12" opacity=".85"/>
+        <path d="M300 330 C450 360 520 520 760 560 S980 640 1010 640" stroke="#f59e0b" stroke-width="12" opacity=".85"/>
+        <g font-size="16" font-weight="700" stroke="none">
+          <g transform="translate(300 570)"><rect x="-10" y="-22" width="200" height="34" rx="17" fill="#14b25a"/><text x="90" y="0" text-anchor="middle" fill="#fff">Skolevejen · 2,1 km</text></g>
+          <g transform="translate(700 760)"><rect x="-10" y="-22" width="190" height="34" rx="17" fill="#0ea5e9"/><text x="85" y="0" text-anchor="middle" fill="#fff">Åstien · 3,4 km</text></g>
+          <g transform="translate(800 590)"><rect x="-10" y="-22" width="220" height="34" rx="17" fill="#f59e0b"/><text x="100" y="0" text-anchor="middle" fill="#fff">Sportsruten · 4,8 km</text></g>
+        </g>
+      </g>
+      <g id="ov-prob" style="display:none"></g>
+      <g id="ov-probs-always">${PROBS.slice(0,2).map((p,i)=>probMk(p,i)).join('')}</g>
+      <g id="me" transform="translate(690 520)"><circle r="34" fill="#3b82f6" opacity=".15"/><circle r="12" fill="#3b82f6" stroke="#fff" stroke-width="4"/></g>
+    </g>
+  </svg>
+  <div class="map-title"><span class="live"></span> 412 bumler aktive nu</div>
+  <button class="locbtn" id="locBtn">${ic('nav')}</button>
+  <div class="map-panel">
+    <div class="seg light" id="mapSeg">
+      <button class="on" data-m="bev">Bevægelse</button><button data-m="ruter">Ruter</button><button data-m="prob">Problemer</button>
+    </div>
+    <div class="stats3" id="mapStats"></div>
+  </div>`;
+  $('#ov-prob').innerHTML=PROBS.slice(2).map((p,i)=>probMk(p,i+2)).join('');
+  setMapMode(mapMode);
+  $('#mapSeg').onclick=e=>{const b=e.target.closest('button'); if(b) setMapMode(b.dataset.m);};
+  $('#locBtn').onclick=()=>{pan={x:0,y:0};applyPan(true);toast('Du er her – Tønder centrum');};
+  document.querySelectorAll('#map .mk').forEach(m=>m.addEventListener('click',ev=>{
+    if(moved) return; const p=PROBS[+m.dataset.p]; openForslag(FORSLAG[p.f].id);
+  }));
+  initPan(); fitMap();
+}
+function setMapMode(m){
+  mapMode=m;
+  document.querySelectorAll('#mapSeg button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+  $('#ov-bev').style.display=m==='bev'?'':'none';
+  $('#ov-ruter').style.display=m==='ruter'?'':'none';
+  $('#ov-prob').style.display=m==='prob'?'':'none';
+  $('#mapStats').innerHTML=MAPSTATS[m].map(s=>`<div><div class="ic" ${m==='prob'?'style="background:#fde8e8;color:#ef4444"':''}>${ic(s[0])}</div><b>${s[1]}</b><span>${s[2]}</span></div>`).join('');
+}
+let pan={x:0,y:0}, moved=false, upp=1;
+function fitMap(){
+  const svg=$('#map'); if(!svg) return; const w=svg.clientWidth||innerWidth, h=svg.clientHeight||innerHeight;
+  upp=Math.max(900/w,900/h); const W=w*upp, H=h*upp;
+  svg.setAttribute('viewBox',`${(700-W/2).toFixed(0)} ${(480-H/2+H*0.06).toFixed(0)} ${W.toFixed(0)} ${H.toFixed(0)}`);
+}
+addEventListener('resize',fitMap);
+function applyPan(anim){const g=$('#mapG'); g.style.transition=anim?'transform .4s':'none'; g.setAttribute('transform',`translate(${pan.x} ${pan.y})`); g.style.transform=`translate(${pan.x}px,${pan.y}px)`;}
+function initPan(){
+  const svg=$('#map'); let start=null;
+  svg.addEventListener('pointerdown',e=>{start={x:e.clientX,y:e.clientY,px:pan.x,py:pan.y}; moved=false;});
+  window.addEventListener('pointermove',e=>{
+    if(!start) return;
+    const sc=upp;
+    const dx=(e.clientX-start.x)*sc, dy=(e.clientY-start.y)*sc;
+    if(Math.abs(dx)+Math.abs(dy)>6) moved=true;
+    pan.x=Math.max(-450,Math.min(450,start.px+dx)); pan.y=Math.max(-350,Math.min(350,start.py+dy)); applyPan(false);
+  });
+  window.addEventListener('pointerup',()=>{start=null; setTimeout(()=>moved=false,50);});
+}
+
+/* ---------------- RANGLISTE ---------------- */
+let rangTab='skoler', rangPer='Måned';
+const RANG={
+  skoler:[['Tønder Overskole','Tønder',48210,1],['Tønder Distriktsskole','Tønder',46970,1],['Toftlund Skole','Toftlund',41330,-1],['Skærbæk Skole','Skærbæk',39880,1],['Løgumkloster Distriktsskole','Løgumkloster',35120,0],['Bredebro Skole','Bredebro',30440,-1],['Højer Skole','Højer',27610,1],['Rømø Skole','Rømø',19950,0]],
+  byer:[['Tønder','Tønder Kommune',412800,1],['Skærbæk','Tønder Kommune',288150,1],['Toftlund','Tønder Kommune',261020,-1],['Løgumkloster','Tønder Kommune',220340,0],['Bredebro','Tønder Kommune',154900,1],['Højer','Tønder Kommune',121770,-1],['Rømø','Tønder Kommune',88310,0]],
+  grupper:[['Fredagscyklisterne','9 medlemmer',22410,1],['Løbeklubben 7.A','14 medlemmer',21980,1],['6.B Gå-holdet','18 medlemmer',20370,1],['Spejderne Tønder','22 medlemmer',18040,-1],['Bumle-bande','6 medlemmer',15210,0],['Hundeluftere','11 medlemmer',12880,1]],
+  personer:[['Victor','6.B · Tønder Distriktsskole',3910,1],['Johan','6.B · Tønder Distriktsskole',3655,1],['Anonym Bumle #4821','Tønder Overskole',3420,-1],['Ida','5.A · Toftlund Skole',3105,0],['Noah','6.C · Tønder Overskole',2880,1],['ME','6.B · Tønder Distriktsskole',2614,1],['Emma','6.A · Skærbæk Skole',2470,-1],['Anonym Bumle #1077','Højer Skole',2215,0]],
+};
+const isMe=r=>r[0]==='ME'||(rangTab==='skoler'&&r[0]==='Tønder Distriktsskole')||(rangTab==='byer'&&r[0]==='Tønder')||(rangTab==='grupper'&&r[0]==='6.B Gå-holdet');
+function rowName(r){ if(r[0]!=='ME') return r[0]; return state.anon?'Du (anonym)':state.name+' (dig)'; }
+function renderRang(){
+  const mult={Uge:.25,Måned:1,År:10.5}[rangPer];
+  const rows=RANG[rangTab].map(r=>[r[0],r[1],Math.round(r[2]*mult),r[3]]);
+  const top=rows.slice(0,3), rest=rows.slice(3);
+  const av=(n)=>`<div class="avatar" style="background:${n==='ME'?'var(--yellow)':colorFor(n)};color:${n==='ME'?'#3b2a00':'#fff'}">${rangTab==='skoler'?ic('school'):rangTab==='byer'?ic('pin'):n.startsWith('Anonym')?'?':initials(n==='ME'?state.name:n)}</div>`;
+  const pod=(r,place,h,col)=>`<div class="pod">${av(r[0])}<div class="nm">${rowName(r)}</div><div class="pt">${fmt(r[2])} p</div><div class="blk" style="height:${h}px;background:${col}">${place}</div></div>`;
+  $('#v-rang').innerHTML=`<div class="wrap">
+    <div class="head"><div><h2>Rangliste</h2><div class="sub">Tønder Kommune · point for skridt og cykelkilometer</div></div></div>
+    <div class="seg light" id="rangSeg" style="max-width:620px">${['skoler','byer','grupper','personer'].map(t=>`<button data-t="${t}" class="${t===rangTab?'on':''}">${t[0].toUpperCase()+t.slice(1)}</button>`).join('')}</div>
+    <div class="chip-row" id="perRow" style="margin-top:14px">${['Uge','Måned','År'].map(p=>`<button class="chip ${p===rangPer?'on':''}" data-p="${p}">${p==='Uge'?'Denne uge':p==='Måned'?'November':'2026'}</button>`).join('')}</div>
+    <div class="card">
+      <div class="podium">${pod(top[1],2,90,'#a8b3bf')}${pod(top[0],1,130,'#f5b301')}${pod(top[2],3,66,'#d08b4f')}</div>
+    </div>
+    <div class="lb" style="margin-top:16px">${rest.map((r,i)=>`<div class="r ${isMe(r)?'me':''}"><div class="n">${i+4}</div>${av(r[0])}<div class="nm">${rowName(r)}<small>${r[1]}</small></div><div style="text-align:right"><div class="p">${fmt(r[2])} p</div><div class="trend" style="color:${r[3]>0?'#14b25a':r[3]<0?'#ef4444':'#9aa0a6'}">${r[3]>0?'▲':r[3]<0?'▼':'–'}</div></div></div>`).join('')}</div>
+    <div class="muted" style="text-align:center;margin-top:16px;font-size:14px">${ic('trophy','" style="width:16px;height:16px;vertical-align:-3px')} Vinderen hver måned får et <b>win</b>. 10 wins kan indløses til fx AirPods.</div>
+  </div>`;
+  $('#rangSeg').onclick=e=>{const b=e.target.closest('button'); if(b){rangTab=b.dataset.t; renderRang();}};
+  $('#perRow').onclick=e=>{const b=e.target.closest('button'); if(b){rangPer=b.dataset.p; renderRang();}};
+}
+
+/* ---------------- FORSLAG ---------------- */
+const STATUSES=['Idé','Afstemning','Mest ønsket','Sendt til kommunen','Under behandling','Gennemført'];
+const STCOL={'Idé':['#f1f2f4','#4b5058'],'Afstemning':['#e8f1ff','#2563eb'],'Mest ønsket':['#f3e8ff','#7c3aed'],'Sendt til kommunen':['#fff1e6','#c2410c'],'Under behandling':['#fff7d6','#a16207'],'Gennemført':['#e3f6ea','#0f9a4c']};
+const CATS={'Cykelsti':['bike','#14b25a','#0b7a3c'],'Skolevej':['school','#f59e0b','#d97706'],'Fortov':['walk','#64748b','#334155'],'Bænke':['bench','#a16207','#713f12'],'Grønt område':['tree','#22c55e','#15803d'],'Gadelys':['lamp','#6366f1','#3730a3'],'Vandpost':['water','#0ea5e9','#0369a1']};
+let FORSLAG=[
+  {id:1,title:'Cykelsti langs Østergade',cat:'Cykelsti',status:'Sendt til kommunen',votes:342,price:1200000,place:'Østergade, Tønder',by:'Victor',days:21,
+   desc:'Der mangler en cykelsti på strækningen fra centrum ud mod Sportspladsen. Mange børn cykler her til fodbold, og bilerne kører tæt forbi.',
+   comments:[['Johan','Jeg cykler der hver dag, det er virkelig utrygt!'],['Tønder Kommune','Tak for forslaget. Det er sendt videre til Teknik- og Miljøudvalget og behandles på mødet i december.',1]]},
+  {id:2,title:'Fodgængerfelt ved det farlige kryds',cat:'Skolevej',status:'Under behandling',votes:518,price:85000,place:'Krydset ved Vestergade',by:'Malthe',days:34,
+   desc:'Krydset på vejen til skolen er meget svært at komme over om morgenen. Et fodgængerfelt med blink ville gøre skolevejen meget mere sikker.',
+   comments:[['Tønder Distriktsskole','Skolebestyrelsen bakker op om forslaget.',1],['Tønder Kommune','Vi er i gang med en trafiktælling i krydset. Forventet svar i januar.',1]]},
+  {id:3,title:'Flere bænke langs åen',cat:'Bænke',status:'Mest ønsket',votes:276,price:24000,place:'Stien langs Vidå',by:'Ida',days:12,
+   desc:'Det er en super gåtur langs åen, men der er næsten ingen steder at sætte sig. 6 nye bænke ville gøre turen bedre for både børn og ældre.',
+   comments:[['Emma','Ja tak! Min mormor vil gerne gå med, hvis hun kan holde pauser.']]},
+  {id:4,title:'Gadelys på stien til hallen',cat:'Gadelys',status:'Afstemning',votes:154,price:60000,place:'Stien bag Tønder Hallen',by:'Noah',days:6,
+   desc:'Stien til hallen er helt mørk om vinteren. Vi går til træning kl. 17 og så er det kulsort.',
+   comments:[['Victor','Det er ret uhyggeligt at cykle der i mørke.']]},
+  {id:5,title:'Vandpost ved Sportspladsen',cat:'Vandpost',status:'Gennemført',votes:401,price:15000,place:'Tønder Sportsplads',by:'Johan',days:120,
+   desc:'En vandpost hvor man kan fylde sin drikkedunk, når man har løbet eller cyklet.',
+   comments:[['Tønder Kommune','Vandposten er nu sat op. Tak til alle der stemte! 💧',1],['Malthe','Fedt! Den bruger jeg hver dag.']]},
+  {id:6,title:'Blomstereng i byparken',cat:'Grønt område',status:'Idé',votes:23,price:8000,place:'Byparken, Tønder',by:'Emma',days:2,
+   desc:'En del af græsplænen kunne laves om til en blomstereng til bier og sommerfugle. Det passer jo godt til ByBumle 🐝',
+   comments:[]},
+  {id:7,title:'Bredere fortov på Storegade',cat:'Fortov',status:'Afstemning',votes:98,price:150000,place:'Storegade, Tønder',by:'Anonym Bumle',days:9,
+   desc:'Fortovet er så smalt, at man ikke kan gå to ved siden af hinanden eller komme forbi med en barnevogn.',
+   comments:[['Tønder Handelsstandsforening','Vi vil gerne være med til at kigge på løsninger.',1]]},
+];
+let fFilter='Alle';
+const kr=n=>fmt(n)+' kr.';
+const stPill=s=>`<span class="pill" style="background:${STCOL[s][0]};color:${STCOL[s][1]}">${s}</span>`;
+const fImg=f=>{const c=CATS[f.cat]; return f.photo?`background-image:url(${f.photo})`:`background:linear-gradient(135deg,${c[1]},${c[2]})`;};
+function renderForslag(){
+  const list=FORSLAG.filter(f=>fFilter==='Alle'||f.status===fFilter);
+  $('#v-forslag').innerHTML=`<div class="wrap">
+    <div class="head"><div><h2>Forslag</h2><div class="sub">Gør Tønder bedre – foreslå, stem og kommentér</div></div>
+      <button class="fab" id="newF">${ic('plus')} Nyt forslag</button></div>
+    <div class="chip-row" id="fChips">${['Alle',...STATUSES].map(s=>`<button class="chip ${s===fFilter?'on':''}" data-s="${s}">${s}</button>`).join('')}</div>
+    <div class="fcards">${list.map(f=>`<button class="fcard" data-id="${f.id}">
+      <div class="fimg" style="${fImg(f)}">${f.photo?'':ic(CATS[f.cat][0])}${stPill(f.status)}</div>
+      <div class="fbody"><b>${f.title}</b>
+        <div class="meta"><span>${ic('pin')}${f.place}</span></div>
+        <div class="meta" style="margin-top:auto"><span style="color:${state.myVotes.has(f.id)?'var(--green)':''}">${ic('thumb')}${fmt(f.votes)}</span><span>${ic('comment')}${f.comments.length}</span><span style="margin-left:auto;font-weight:700;color:var(--text)">${kr(f.price)}</span></div>
+      </div></button>`).join('') || '<div class="muted" style="padding:30px">Ingen forslag med denne status endnu.</div>'}</div>
+  </div>`;
+  $('#fChips').onclick=e=>{const b=e.target.closest('button'); if(b){fFilter=b.dataset.s; renderForslag();}};
+  document.querySelectorAll('.fcard').forEach(c=>c.onclick=()=>openForslag(+c.dataset.id));
+  $('#newF').onclick=openNewForslag;
+}
+function openForslag(id){
+  const f=FORSLAG.find(x=>x.id===id); const si=STATUSES.indexOf(f.status); const voted=state.myVotes.has(id);
+  openSheet(f.title,`
+    <div class="fimg" style="${fImg(f)};border-radius:20px;height:180px">${f.photo?'':ic(CATS[f.cat][0])}${stPill(f.status)}</div>
+    <div class="timeline">${STATUSES.map((s,i)=>`<i class="${i<=si?'done':''}"></i>`).join('')}</div>
+    <div class="tl-labels">${STATUSES.map((s,i)=>`<span class="${i===si?'cur':''}">${s}</span>`).join('')}</div>
+    <div class="info3"><div><small>Pris (anslået)</small><b>${kr(f.price)}</b></div><div><small>Kategori</small><b>${f.cat}</b></div><div><small>Oprettet af</small><b>${f.by}</b></div></div>
+    <div class="meta" style="margin-bottom:10px"><span>${ic('pin')}${f.place}</span><span>${ic('clock')}for ${f.days===0?'lige nu':f.days+' dage siden'}</span></div>
+    <p style="font-size:17px;line-height:1.5;margin:0 0 18px">${f.desc}</p>
+    <div class="vote">
+      <button class="btn ${voted?'voted':'primary'}" id="voteBtn" style="margin:0">${ic(voted?'check':'thumb')} ${voted?'Du har stemt':'Stem for'} · <span id="vc">${fmt(f.votes)}</span></button>
+    </div>
+    <div class="sec-title" style="font-size:19px;margin-top:24px">Kommentarer (${f.comments.length})</div>
+    <div id="cms">${f.comments.map(cmHTML).join('') || '<div class="muted">Ingen kommentarer endnu – vær den første!</div>'}</div>
+    <div class="row" style="margin-top:16px;gap:10px"><input id="cmIn" placeholder="Skriv en kommentar…" style="flex:1;border:1px solid var(--line);border-radius:999px;padding:13px 18px;font-size:17px;outline:none;background:#fff"><button class="sm" id="cmSend" style="padding:13px 18px">Send</button></div>
+  `);
+  $('#voteBtn').onclick=()=>{
+    if(state.myVotes.has(id)){state.myVotes.delete(id); f.votes--;} else {state.myVotes.add(id); f.votes++; toast('Tak for din stemme!');}
+    openForslag(id); renderForslag();
+  };
+  $('#cmSend').onclick=()=>{
+    const v=$('#cmIn').value.trim(); if(!v) return;
+    f.comments.push([state.anon?'Anonym Bumle':state.name,v]); openForslag(id); renderForslag();
+    $('#sheetBody').scrollTop=1e5;
+  };
+}
+function cmHTML(c){
+  const off=c[2];
+  return `<div class="cm"><div class="avatar" style="background:${off?'#2563eb':colorFor(c[0])};color:#fff">${off?ic('school','" style="width:18px;height:18px'):initials(c[0])}</div><div class="bub"><b>${c[0]}</b> ${off?'<span class="pill official" style="padding:2px 8px;font-size:11px">Officielt svar</span>':''}<p>${c[1].replace(/</g,'&lt;')}</p></div></div>`;
+}
+function openNewForslag(){
+  openSheet('Nyt forslag',`<div class="form">
+    <label>Titel</label><input id="nfT" placeholder="Fx: Cykelstativ ved biblioteket">
+    <label>Kategori</label><select id="nfC">${Object.keys(CATS).map(c=>`<option>${c}</option>`).join('')}</select>
+    <label>Beskrivelse</label><textarea id="nfD" placeholder="Hvad er problemet, og hvordan kan det løses?"></textarea>
+    <label>Billede</label><label class="photo" id="nfPh" style="margin:0"><span>${ic('camera')}<br>Tag eller vælg et billede</span><input type="file" accept="image/*" id="nfFile"></label>
+    <label>Placering</label><select id="nfP"><option>Min nuværende placering (Tønder centrum)</option><option>Tønder Distriktsskole</option><option>Tønder Sportsplads</option><option>Byparken</option><option>Stien langs Vidå</option></select>
+    <label>Anslået pris (kr.)</label><input id="nfPr" type="number" inputmode="numeric" placeholder="Fx 25000">
+    <button class="btn primary" id="nfGo" style="margin-top:22px">Opret forslag</button>
+  </div>`);
+  let photo=null;
+  $('#nfFile').onchange=e=>{const file=e.target.files[0]; if(!file) return; const r=new FileReader(); r.onload=()=>{photo=r.result; const ph=$('#nfPh'); ph.style.backgroundImage=`url(${photo})`; ph.querySelector('span').style.display='none';}; r.readAsDataURL(file);};
+  $('#nfGo').onclick=()=>{
+    const t=$('#nfT').value.trim()||'Mit nye forslag';
+    const p=$('#nfP').value;
+    const f={id:Date.now(),title:t,cat:$('#nfC').value,status:'Idé',votes:1,price:+$('#nfPr').value||10000,place:p.startsWith('Min')?'Tønder centrum':p,by:state.anon?'Anonym Bumle':state.name,days:0,desc:$('#nfD').value.trim()||'Ingen beskrivelse.',comments:[],photo};
+    FORSLAG.unshift(f); state.myVotes.add(f.id); fFilter='Alle';
+    closeSheet(); renderForslag(); switchView('forslag'); toast('Dit forslag er oprettet!');
+  };
+}
+
+/* ---------------- PROFIL ---------------- */
+const REWARDS=[['🌳','Plant et træ i Tønders navn',1],['🔧','Gratis cykelservice',2],['🎬','2 biografbilletter',3],['⚽','Sportsudstyr (gavekort 300 kr.)',5],['🚌','Gratis busbillet i en måned',4],['🎧','AirPods',10]];
+function renderProfil(){
+  $('#v-profil').innerHTML=`<div class="wrap">
+    <div class="head"><h2>Profil</h2></div>
+    <div class="grid">
+      <div class="card">
+        <div class="prof"><div class="avatar">${initials(state.name)}</div><div><div style="font-size:26px;font-weight:800">${state.name}</div><div class="muted">6.B · Tønder Distriktsskole</div><span class="pill lvl" style="margin-top:8px">🐝 Bumle-niveau 7</span></div></div>
+        <div class="mini" style="margin-top:18px;grid-template-columns:repeat(3,1fr)"><div><b>412.880</b><span>skridt i alt</span></div><div><b>286 km</b><span>cyklet i alt</span></div><div><b>${state.wins}</b><span>wins</span></div></div>
+      </div>
+      <div class="card">
+        <h3>🏅 Dine wins</h3>
+        <div class="muted">Vind en måned i din gruppe eller klasse og få et win. Indløs dem til præmier.</div>
+        <div class="wins">${Array.from({length:10},(_,i)=>`<i class="${i<state.wins?'on':''}"></i>`).join('')}</div>
+        <div class="row between"><b>${state.wins} / 10 wins</b><span class="muted">${Math.max(0,10-state.wins)} til AirPods 🎧</span></div>
+      </div>
+    </div>
+    <div class="sec-title">Belønninger</div>
+    <div class="card" style="padding-top:6px;padding-bottom:6px">${REWARDS.map((r,i)=>`<div class="reward"><div class="em">${r[0]}</div><div class="t"><b>${r[1]}</b><small>${r[2]} win${r[2]>1?'s':''}</small></div><button class="sm ${state.wins<r[2]?'dis':''}" data-r="${i}">${state.wins<r[2]?'Mangler '+(r[2]-state.wins):'Indløs'}</button></div>`).join('')}</div>
+    <div class="sec-title row between" style="display:flex">Mine grupper <button class="sm" id="newG" style="font-size:15px">+ Opret gruppe</button></div>
+    <div class="card" style="padding-top:6px;padding-bottom:6px">${state.groups.map(g=>`<div class="reward"><div class="em">${g.emoji}</div><div class="t"><b>${g.name}</b><small>${g.members} medlemmer</small></div>${ic('chev','" style="color:#b0b4ba')}</div>`).join('')}</div>
+    <div class="sec-title">Indstillinger</div>
+    <div class="card" style="padding-top:4px;padding-bottom:4px">
+      <div class="set"><div class="t">Vær anonym på ranglister<small>Dit navn vises som "Anonym Bumle"</small></div><button class="toggle ${state.anon?'on':''}" id="tgAnon"></button></div>
+      <div class="set"><div class="t">Forbind til Apple Sundhed<small>Henter skridt og cykelture automatisk</small></div><button class="toggle ${state.health?'on':''}" id="tgHealth"></button></div>
+      <div class="set"><div class="t">Dagligt mål<small>10.000 skridt</small></div>${ic('chev','" style="color:#b0b4ba')}</div>
+    </div>
+    <button class="btn white" id="logout" style="margin-top:22px;color:#ef4444">${ic('logout')} Log ud</button>
+    <div class="muted" style="text-align:center;margin-top:18px;font-size:13px">ByBumle v1.0 · Lavet af Malthe, Victor og Johan</div>
+  </div>`;
+  document.querySelectorAll('#v-profil [data-r]').forEach(b=>b.onclick=()=>{
+    const r=REWARDS[+b.dataset.r]; if(state.wins<r[2]){toast(`Du mangler ${r[2]-state.wins} wins`);return;}
+    state.wins-=r[2]; renderProfil(); toast(`${r[1]} er indløst! 🎉`);
+  });
+  $('#tgAnon').onclick=()=>{state.anon=!state.anon; renderProfil(); renderRang(); toast(state.anon?'Du er nu anonym på ranglisterne':'Dit navn vises på ranglisterne');};
+  $('#tgHealth').onclick=()=>{state.health=!state.health; renderProfil();};
+  $('#newG').onclick=openNewGroup;
+  $('#logout').onclick=logout;
+}
+function openNewGroup(){
+  let size=1; const SZ=[['Lille','op til 10',10],['Mellem','op til 25',25],['Stor','op til 50',50]];
+  openSheet('Opret gruppe',`<div class="form">
+    <label>Gruppens navn</label><input id="ngN" placeholder="Fx: Søndagsgåturen">
+    <label>Størrelse</label><div class="opt" id="ngS">${SZ.map((s,i)=>`<button data-i="${i}" class="${i===size?'on':''}"><b>${s[2]} kr.</b>${s[0]}<br><small class="muted">${s[1]}</small></button>`).join('')}</div>
+    <div class="muted" style="font-size:14px;margin-top:12px">Det koster lidt at oprette en gruppe, så vi kan holde appen kørende. Overskuddet går til skoler og projekter i kommunen.</div>
+    <button class="btn primary" id="ngGo" style="margin-top:20px">${ic('apple','" style="fill:#fff;stroke:none')} Betal med Apple Pay</button>
+  </div>`);
+  $('#ngS').onclick=e=>{const b=e.target.closest('button'); if(!b) return; size=+b.dataset.i; document.querySelectorAll('#ngS button').forEach(x=>x.classList.toggle('on',x===b));};
+  $('#ngGo').onclick=()=>{
+    const btn=$('#ngGo'); btn.innerHTML='<div class="spinner"></div>';
+    setTimeout(()=>{state.groups.unshift({name:$('#ngN').value.trim()||'Min nye gruppe',members:1,emoji:'✨'}); closeSheet(); renderProfil(); toast('Gruppen er oprettet!');},1000);
+  };
+}
+
+/* ---------------- SHEET ---------------- */
+function openSheet(title,html){$('#sheetTitle').textContent=title; $('#sheetBody').innerHTML=html; $('#sheetBody').scrollTop=0; $('#sheet').classList.add('on'); $('#scrim').classList.add('on');}
+function closeSheet(){document.activeElement&&document.activeElement.blur(); $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on');}
+$('#scrim').onclick=closeSheet; $('#sheetX').onclick=closeSheet;
+
+/* iOS: stop pinch-zoom & double-tap zoom */
+document.addEventListener('gesturestart',e=>e.preventDefault());
+let lastTouch=0; document.addEventListener('touchend',e=>{const n=Date.now(); if(n-lastTouch<300 && !e.target.closest('input,textarea,select')) e.preventDefault(); lastTouch=n;},{passive:false});
+
+if('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
